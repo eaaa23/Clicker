@@ -1,9 +1,10 @@
 from tkinter import *
 from tkinter import messagebox
-from keyboard import *
-from pymouse import *
-from multiprocessing import *
+from keyboard import is_pressed
+from pymouse import PyMouse
+from multiprocessing import Process
 from time import sleep
+import os
 
 MODULE = [(LEFT, "Start click left by this key"),
           (RIGHT, "Start click right by this key")]
@@ -120,10 +121,11 @@ class Side:
 
 
 def fix_scaling(rt):
-    import ctypes
-    ctypes.windll.shcore.SetProcessDpiAwareness(1)
-    scaleFactor = ctypes.windll.shcore.GetScaleFactorForDevice(0)
-    root.tk.call('tk', 'scaling', scaleFactor / 75)
+    if os.name == 'nt':
+        import ctypes
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)
+        scaleFactor = ctypes.windll.shcore.GetScaleFactorForDevice(0)
+        root.tk.call('tk', 'scaling', scaleFactor / 75)
 
 
 def main():
