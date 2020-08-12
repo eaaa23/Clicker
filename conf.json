@@ -1,0 +1,16 @@
+{
+    "WindowWidthRate": 0.5,
+    "WindowHeightRate": 0.3,
+    "font":
+    {
+        "DefaultFont": "Arial",
+        "FontSizeRate": 0.027,
+        "ComboboxFontRate": 0.6
+    },
+    "click":
+    {
+        "CPSMin": 5,
+        "CPSMax": 50,
+        "CPSInterval": 5
+    }
+}

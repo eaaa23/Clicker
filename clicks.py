@@ -7,6 +7,7 @@ from multiprocessing import Process
 from time import sleep
 import os
 import ctypes
+import json
 
 MODULE = [(LEFT, "Start click left by this key"),
           (RIGHT, "Start click right by this key")]
@@ -23,14 +24,19 @@ else:
     print("Debug: not windows")
     screenwidth = root.winfo_screenwidth()
     screenheight = root.winfo_screenheight()
-WINDOW_WIDTH = int(screenwidth * 0.5)
-WINDOW_HEIGHT = int(screenheight * 0.3)
-FONT_SIZE = screenwidth // 75
-ENTRY_SIZE = (WINDOW_WIDTH // 10, WINDOW_HEIGHT // 30)
-COMBOBOX_FONT_RATE = 0.6
-CPS_MIN = 5
-CPS_MAX = 50
-CPS_INTERVAL = 5
+
+with open("conf.json") as fp:
+    struct = json.load(fp)
+    WINDOW_WIDTH = int(screenwidth * struct["WindowWidthRate"])
+    WINDOW_HEIGHT = int(screenheight * struct["WindowHeightRate"])
+    font_struct = struct["font"]
+    DF_FONT = font_struct["DefaultFont"]
+    FONT_SIZE = int(WINDOW_WIDTH * (font_struct["FontSizeRate"]))
+    COMBOBOX_FONT_RATE = font_struct["ComboboxFontRate"]
+    click_struct = struct["click"]
+    CPS_MIN = click_struct["CPSMin"]
+    CPS_MAX = click_struct["CPSMax"]
+    CPS_INTERVAL = click_struct["CPSInterval"]
 root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
 root.title("Quick Clicker")
 global_mouse = PyMouse()
@@ -44,6 +50,7 @@ KEYS.extend([chr(i) for i in range(ord("A"), ord("A")+26)])
 
 def click_mouse(ms):
     global_mouse.press(*global_mouse.position(), ms)
+    global_mouse.release(*global_mouse.position(), ms)
 
 
 class Presser:
