@@ -62,6 +62,7 @@ class Presser:
         return self.running
 
     def run(self, key, mouse, interval=0.0, long_press=True):
+        print(f"Call run() with {long_press=}")
         if self.running:
             self.stop()
         try:
@@ -81,7 +82,8 @@ class Presser:
     def do_press(self, key, mouse, interval, long_press):
         if long_press:
             while True:
-                if is_pressed(key):
+                wait(key)
+                while is_pressed(key):
                     click_mouse(mouse)
                     sleep(interval)
         else:
@@ -90,6 +92,12 @@ class Presser:
                 while is_pressed(key):
                     click_mouse(mouse)
                     sleep(interval)
+                while not is_pressed(key):
+                    click_mouse(mouse)
+                    sleep(interval)
+                # next time press
+                while is_pressed(key):
+                    sleep(0.1)
 
     def __del__(self):
         self.stop()
@@ -112,6 +120,11 @@ class Side:
         self.cps_scale_obj = Scale(self.frame, from_=CPS_MIN, to=CPS_MAX, resolution=CPS_INTERVAL, orient=HORIZONTAL,
                                    font=combobox_font)
         self.cps_scale_obj.pack()
+        self.mod = BooleanVar()
+        self.changemod_obj = Checkbutton(self.frame, text="Long press to click", variable=self.mod,
+                                         font=combobox_font,
+                                         onvalue=True, offvalue=False)
+        self.changemod_obj.pack(side=BOTTOM)
         self.stop_btn_obj = Button(self.frame, text=button_text[1], font=font, command=self.handle_button_stop)
         self.stop_btn_obj.pack(side=BOTTOM)
         self.start_btn_obj = Button(self.frame, text=button_text[0], font=font, command=self.handle_button_start)
@@ -126,8 +139,9 @@ class Side:
         cps = self.cps_scale_obj.get()
         input_msg = self.key_choose_obj.get().strip()
         try:
-            self.presser.run(input_msg, SIDE2MOUSE[self.SIDE], 1/cps)
+            self.presser.run(input_msg, SIDE2MOUSE[self.SIDE], 1/cps, self.mod.get())
         except ValueError:
+            self.running_tip["text"] = ""
             if input_msg:
                 messagebox.showerror("Invalid key", f"`{input_msg}` is not a valid key")
             else:
@@ -142,10 +156,10 @@ class Side:
             return
         self.running_tip["text"] = ""
         root.update()
-        self.presser.stop()
 
 
-def fix_scaling(rt):
+
+def fix_scaling():
     if os.name == 'nt':
         ctypes.windll.shcore.SetProcessDpiAwareness(1)
         scaleFactor = ctypes.windll.shcore.GetScaleFactorForDevice(0)
@@ -155,7 +169,7 @@ def fix_scaling(rt):
 def main():
     sides = [Side(*par) for par in MODULE]
     for sd in sides: sd.pack()
-    fix_scaling(root)
+    fix_scaling()
     root.mainloop()
 
 
