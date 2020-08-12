@@ -28,6 +28,9 @@ WINDOW_HEIGHT = int(screenheight * 0.3)
 FONT_SIZE = screenwidth // 75
 ENTRY_SIZE = (WINDOW_WIDTH // 10, WINDOW_HEIGHT // 30)
 COMBOBOX_FONT_RATE = 0.6
+CPS_MIN = 5
+CPS_MAX = 50
+CPS_INTERVAL = 5
 root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
 root.title("Quick Clicker")
 global_mouse = PyMouse()
@@ -99,8 +102,9 @@ class Side:
         self.key_choose_obj.pack()
         self.cps_text_obj = Label(self.frame, text="CPS:", font=font)
         self.cps_text_obj.pack()
-        self.cps_entry_obj = Entry(self.frame)
-        self.cps_entry_obj.pack()
+        self.cps_scale_obj = Scale(self.frame, from_=CPS_MIN, to=CPS_MAX, resolution=CPS_INTERVAL, orient=HORIZONTAL,
+                                   font=combobox_font)
+        self.cps_scale_obj.pack()
         self.stop_btn_obj = Button(self.frame, text=button_text[1], font=font, command=self.handle_button_stop)
         self.stop_btn_obj.pack(side=BOTTOM)
         self.start_btn_obj = Button(self.frame, text=button_text[0], font=font, command=self.handle_button_start)
@@ -112,16 +116,7 @@ class Side:
         self.frame.pack(side=self.SIDE)
 
     def handle_button_start(self):
-        cps_msg = self.cps_entry_obj.get().strip()
-        try:
-            int(cps_msg)
-        except ValueError:
-            messagebox.showerror("Not a number", f"`{cps_msg}` is not a number; please input an integer")
-            return
-        cps = int(cps_msg)
-        if cps <= 0:
-            messagebox.showerror("Zero", f"Must bigger than 0")
-            return
+        cps = self.cps_scale_obj.get()
         input_msg = self.key_choose_obj.get().strip()
         try:
             self.presser.run(input_msg, SIDE2MOUSE[self.SIDE], 1/cps)
