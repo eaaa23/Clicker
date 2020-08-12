@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter.ttk import Combobox
 from tkinter import messagebox
 from keyboard import is_pressed, wait
 from pymouse import PyMouse
@@ -26,10 +27,16 @@ WINDOW_WIDTH = int(screenwidth * 0.5)
 WINDOW_HEIGHT = int(screenheight * 0.3)
 FONT_SIZE = screenwidth // 75
 ENTRY_SIZE = (WINDOW_WIDTH // 10, WINDOW_HEIGHT // 30)
-print(f"Debug: {screenwidth=}, {screenheight=}, {WINDOW_WIDTH=}, {WINDOW_HEIGHT=}, {FONT_SIZE=}")
+COMBOBOX_FONT_RATE = 0.6
 root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
 root.title("Quick Clicker")
 global_mouse = PyMouse()
+
+MAX_FN = 12
+KEYS = []
+KEYS.extend([f"F{i}" for i in range(1, MAX_FN+1)])
+KEYS.extend([chr(i) for i in range(ord("A"), ord("A")+26)])
+# extending...
 
 
 def click_mouse(ms):
@@ -79,14 +86,17 @@ class Presser:
 
 
 class Side:
-    def __init__(self, side, text, button_text=("start", "stop"), entry_size=ENTRY_SIZE, font=("Arial", FONT_SIZE)):
+    def __init__(self, side, text, button_text=("start", "stop"), font=("Arial", FONT_SIZE)):
+        combobox_font = list(font)
+        combobox_font[1] = int(combobox_font[1] * COMBOBOX_FONT_RATE)
+        combobox_font = tuple(combobox_font)
         self.frame = Frame(root)
         self.running_tip = Label(self.frame, text="", font=font, fg='red')
         self.running_tip.pack()
         self.base_text_obj = Label(self.frame, text=text, font=font)
         self.base_text_obj.pack()
-        self.key_entry_obj = Entry(self.frame)
-        self.key_entry_obj.pack()
+        self.key_choose_obj = Combobox(self.frame, value=KEYS, font=combobox_font)
+        self.key_choose_obj.pack()
         self.cps_text_obj = Label(self.frame, text="CPS:", font=font)
         self.cps_text_obj.pack()
         self.cps_entry_obj = Entry(self.frame)
@@ -106,13 +116,13 @@ class Side:
         try:
             int(cps_msg)
         except ValueError:
-            messagebox.showerror("Not a number", f"{cps_msg} is not a number; please input an integer")
+            messagebox.showerror("Not a number", f"`{cps_msg}` is not a number; please input an integer")
             return
         cps = int(cps_msg)
         if cps <= 0:
             messagebox.showerror("Zero", f"Must bigger than 0")
             return
-        input_msg = self.key_entry_obj.get().strip()
+        input_msg = self.key_choose_obj.get().strip()
         try:
             self.presser.run(input_msg, SIDE2MOUSE[self.SIDE], 1/cps)
         except ValueError:
