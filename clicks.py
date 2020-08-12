@@ -1,19 +1,32 @@
 from tkinter import *
 from tkinter import messagebox
-from keyboard import is_pressed
+from keyboard import is_pressed, wait
 from pymouse import PyMouse
 from multiprocessing import Process
 from time import sleep
 import os
+import ctypes
 
 MODULE = [(LEFT, "Start click left by this key"),
           (RIGHT, "Start click right by this key")]
 SIDE2MOUSE = {LEFT: 1, RIGHT: 2}
 root = Tk()
-screenwidth = root.winfo_screenwidth()
-screenheight = root.winfo_screenheight()
-WINDOW_WIDTH = screenwidth // 3
-WINDOW_HEIGHT = screenheight // 2
+if os.name == 'nt':
+    from win32 import win32api, win32gui, win32print
+    import win32con
+    print("Debug: windows")
+    hDC = win32gui.GetDC(0)
+    screenwidth = win32print.GetDeviceCaps(hDC, win32con.DESKTOPHORZRES)
+    screenheight = win32print.GetDeviceCaps(hDC, win32con.DESKTOPVERTRES)
+else:
+    print("Debug: not windows")
+    screenwidth = root.winfo_screenwidth()
+    screenheight = root.winfo_screenheight()
+WINDOW_WIDTH = int(screenwidth * 0.5)
+WINDOW_HEIGHT = int(screenheight * 0.3)
+FONT_SIZE = screenwidth // 75
+ENTRY_SIZE = (WINDOW_WIDTH // 10, WINDOW_HEIGHT // 30)
+print(f"Debug: {screenwidth=}, {screenheight=}, {WINDOW_WIDTH=}, {WINDOW_HEIGHT=}, {FONT_SIZE=}")
 root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
 root.title("Quick Clicker")
 global_mouse = PyMouse()
@@ -66,7 +79,7 @@ class Presser:
 
 
 class Side:
-    def __init__(self, side, text, button_text=("start", "stop"), font=("Arial", 20)):
+    def __init__(self, side, text, button_text=("start", "stop"), entry_size=ENTRY_SIZE, font=("Arial", FONT_SIZE)):
         self.frame = Frame(root)
         self.running_tip = Label(self.frame, text="", font=font, fg='red')
         self.running_tip.pack()
@@ -122,7 +135,6 @@ class Side:
 
 def fix_scaling(rt):
     if os.name == 'nt':
-        import ctypes
         ctypes.windll.shcore.SetProcessDpiAwareness(1)
         scaleFactor = ctypes.windll.shcore.GetScaleFactorForDevice(0)
         root.tk.call('tk', 'scaling', scaleFactor / 75)
