@@ -45,7 +45,11 @@ MAX_FN = 12
 KEYS = []
 KEYS.extend([f"F{i}" for i in range(1, MAX_FN+1)])
 KEYS.extend([chr(i) for i in range(ord("A"), ord("A")+26)])
-# extending...
+KEYS.extend(r"-=[]\;',./")
+KEYS.extend(['tab', 'caps lock', 'shift', 'ctrl', 'alt', 'backspace'])
+KEYS.extend(['left', 'right', 'up', 'down'])
+if os.name == 'nt':
+    KEYS.append('win')
 
 
 def click_mouse(ms):
@@ -147,7 +151,7 @@ class Side:
             else:
                 messagebox.showerror("Empty input", f"Cannot use empty key")
             return
-        self.running_tip["text"] = f"Running {input_msg}({cps} CPS)\n"+\
+        self.running_tip["text"] = f"Running key {input_msg} ({cps} CPS)\n"+\
                                    ("[Long press]" if self.mod.get() else "[Click to start or stop]")
         root.update()
 
