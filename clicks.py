@@ -109,7 +109,7 @@ class Side:
         combobox_font[1] = int(combobox_font[1] * COMBOBOX_FONT_RATE)
         combobox_font = tuple(combobox_font)
         self.frame = Frame(root)
-        self.running_tip = Label(self.frame, text="", font=font, fg='red')
+        self.running_tip = Label(self.frame, text="\n", font=font, fg='red')
         self.running_tip.pack()
         self.base_text_obj = Label(self.frame, text=text, font=font)
         self.base_text_obj.pack()
@@ -141,20 +141,21 @@ class Side:
         try:
             self.presser.run(input_msg, SIDE2MOUSE[self.SIDE], 1/cps, self.mod.get())
         except ValueError:
-            self.running_tip["text"] = ""
+            self.running_tip["text"] = "\n"
             if input_msg:
                 messagebox.showerror("Invalid key", f"`{input_msg}` is not a valid key")
             else:
                 messagebox.showerror("Empty input", f"Cannot use empty key")
             return
-        self.running_tip["text"] = f"Running {input_msg}"
+        self.running_tip["text"] = f"Running {input_msg}({cps} CPS)\n"+\
+                                   ("[Long press]" if self.mod.get() else "[Click to start or stop]")
         root.update()
 
     def handle_button_stop(self):
         if not self.presser.is_running():
             messagebox.showerror("Program not start", "Please start it first")
             return
-        self.running_tip["text"] = ""
+        self.running_tip["text"] = "\n"
         root.update()
 
 
