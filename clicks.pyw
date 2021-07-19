@@ -53,8 +53,7 @@ if os.name == 'nt':
 
 
 def click_mouse(ms):
-    global_mouse.press(*global_mouse.position(), ms)
-    global_mouse.release(*global_mouse.position(), ms)
+    global_mouse.click(*global_mouse.position(), ms)
 
 
 class Presser:
@@ -65,8 +64,8 @@ class Presser:
     def is_running(self):
         return self.running
 
-    def run(self, key, mouse, interval=0.0, long_press=True):
-        print(f"Call run() with {long_press=}")
+    def run(self, key, mouse, interval=0.0, long_press=True, limitless=False):
+        print(f"Debug: Call run() with {long_press=}")
         if self.running:
             self.stop()
         try:
@@ -74,7 +73,7 @@ class Presser:
         except ValueError:
             raise
         self.running = True
-        self.ps = Process(target=self.do_press, args=(key, mouse, interval, long_press))
+        self.ps = Process(target=self.do_press, args=(key, mouse, interval, long_press, limitless))
         self.ps.start()
 
     def stop(self):
@@ -83,22 +82,30 @@ class Presser:
         self.running = False
         self.ps.terminate()
 
-    def do_press(self, key, mouse, interval, long_press):
+    def do_press(self, key, mouse, interval, long_press, limitless=False):
         if long_press:
             while True:
                 wait(key)
-                while is_pressed(key):
-                    click_mouse(mouse)
-                    sleep(interval)
+                if limitless:
+                    while is_pressed(key):
+                        click_mouse(mouse)
+                else:
+                    while is_pressed(key):
+                        click_mouse(mouse)
+                        sleep(interval)
         else:
             while True:
                 wait(key)
-                while is_pressed(key):
-                    click_mouse(mouse)
-                    sleep(interval)
-                while not is_pressed(key):
-                    click_mouse(mouse)
-                    sleep(interval)
+                if limitless:
+                    while is_pressed(key): click_mouse(mouse)
+                    while not is_pressed(key): click_mouse(mouse)
+                else:
+                    while is_pressed(key):
+                        click_mouse(mouse)
+                        sleep(interval)
+                    while not is_pressed(key):
+                        click_mouse(mouse)
+                        sleep(interval)
                 # next time press
                 while is_pressed(key):
                     sleep(0.1)
@@ -129,6 +136,11 @@ class Side:
                                          font=combobox_font,
                                          onvalue=True, offvalue=False)
         self.changemod_obj.pack(side=BOTTOM)
+        self.do_inf = BooleanVar()
+        self.change_do_inf_obj = Checkbutton(self.frame, text="Ignore CPS setting and make best", variable=self.do_inf,
+                                             font=combobox_font,
+                                             onvalue=True, offvalue=False)
+        self.change_do_inf_obj.pack(side=BOTTOM)
         self.stop_btn_obj = Button(self.frame, text=button_text[1], font=font, command=self.handle_button_stop)
         self.stop_btn_obj.pack(side=BOTTOM)
         self.start_btn_obj = Button(self.frame, text=button_text[0], font=font, command=self.handle_button_start)
@@ -142,8 +154,9 @@ class Side:
     def handle_button_start(self):
         cps = self.cps_scale_obj.get()
         input_msg = self.key_choose_obj.get().strip()
+        do_inf = self.do_inf.get()
         try:
-            self.presser.run(input_msg, SIDE2MOUSE[self.SIDE], 1/cps, self.mod.get())
+            self.presser.run(input_msg, SIDE2MOUSE[self.SIDE], 1/cps, self.mod.get(), do_inf)
         except ValueError:
             self.running_tip["text"] = "\n"
             if input_msg:
@@ -151,7 +164,7 @@ class Side:
             else:
                 messagebox.showerror("Empty input", f"Cannot use empty key")
             return
-        self.running_tip["text"] = f"Running key {input_msg} ({cps} CPS)\n"+\
+        self.running_tip["text"] = f"Running key {input_msg} ({'inf' if do_inf else cps} CPS)\n"+\
                                    ("[Long press]" if self.mod.get() else "[Click to start or stop]")
         root.update()
 
@@ -161,6 +174,7 @@ class Side:
             return
         self.running_tip["text"] = "\n"
         root.update()
+        self.presser.stop()
 
 
 
